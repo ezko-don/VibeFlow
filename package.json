@@ -1,0 +1,33 @@
+{
+  "name": "vibe-flow",
+  "version": "1.0.0",
+  "description": "A Cursor-like coding editor with free Claude & GPT AI integration",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "desktop:dev": "turbo dev --filter=desktop",
+    "web:dev": "turbo dev --filter=web",
+    "agent:dev": "turbo dev --filter=agent",
+    "desktop:build": "turbo build --filter=desktop",
+    "web:build": "turbo build --filter=web",
+    "test": "turbo test"
+  },
+  "devDependencies": {
+    "@turbo/gen": "^1.10.12",
+    "turbo": "^1.10.12",
+    "prettier": "^3.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "npm@10.0.0"
+} 
