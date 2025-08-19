@@ -1,226 +1,396 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  FolderIcon,
-  
-  ChatBubbleLeftIcon,
+  ChatBubbleLeftRightIcon,
   CommandLineIcon,
+  FolderIcon,
   Cog6ToothIcon,
-  SunIcon,
-  MoonIcon
+  MagnifyingGlassIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
-import { Sidebar } from './sidebar'
-import { MonacoEditor } from './monaco-editor'
-import { ChatPanel } from './chat-panel'
-import { Terminal } from './terminal'
-import { MenuBar } from './menu-bar'
-import { Toolbar } from './toolbar'
-import { SearchPanel } from './search-panel'
-import { SourceControlPanel } from './source-control-panel'
-import { useTheme } from '@/components/providers/theme-provider'
 
-export function EditorLayout() {
-  const [activeFile, setActiveFile] = useState<string | null>(null)
+import { MonacoEditor } from './monaco-editor'
+import { EnhancedAIChat } from './enhanced-ai-chat'
+import { Sidebar } from './sidebar'
+import { TabBar } from './tab-bar'
+import { StatusBar } from './status-bar'
+import { MenuBar } from './menu-bar'
+import { Terminal } from './terminal'
+import { SearchPanel } from './search-panel'
+import { SettingsPanel } from './settings-panel'
+import { CommandPalette } from './command-palette'
+import { ComposerMode } from './composer-mode'
+import { fileSystemService } from '@/lib/file-system'
+
+interface Tab {
+  id: string
+  name: string
+  path: string
+  content: string
+  isDirty: boolean
+  language: string
+}
+
+interface EditorLayoutProps {
+  className?: string
+}
+
+export function EditorLayout({ className = '' }: EditorLayoutProps) {
+  // File and tab management
+  const [tabs, setTabs] = useState<Tab[]>([
+    {
+      id: '1',
+      name: 'App.tsx',
+      path: 'App.tsx',
+      content: '',
+      isDirty: false,
+      language: 'typescript'
+    }
+  ])
+  const [activeTabId, setActiveTabId] = useState('1')
+  const [availableFiles, setAvailableFiles] = useState<string[]>([])
+
+  // Panel states
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isTerminalOpen, setIsTerminalOpen] = useState(false)
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [isSourceControlOpen, setIsSourceControlOpen] = useState(false)
-  const { theme, setTheme } = useTheme()
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
+  const [isComposerOpen, setIsComposerOpen] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(280)
+  const [chatWidth, setChatWidth] = useState(400)
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
+  // Load available files on mount
+  useEffect(() => {
+    const loadFiles = async () => {
+      try {
+        const files = await fileSystemService.getAvailableFiles()
+        setAvailableFiles(files)
+        
+        // Load content for initial tab
+        if (tabs.length > 0) {
+          const content = await fileSystemService.getFileContent(tabs[0].path)
+          setTabs(prev => prev.map(tab => 
+            tab.id === tabs[0].id ? { ...tab, content } : tab
+          ))
+        }
+      } catch (error) {
+        console.error('Failed to load files:', error)
+      }
+    }
+    
+    loadFiles()
+  }, [])
+
+  // Get active tab
+  const activeTab = tabs.find(tab => tab.id === activeTabId)
+
+  // Handle file selection from sidebar
+  const handleFileSelect = useCallback(async (fileName: string) => {
+    // Check if file is already open
+    const existingTab = tabs.find(tab => tab.path === fileName)
+    if (existingTab) {
+      setActiveTabId(existingTab.id)
+      return
+    }
+
+    try {
+      // Load file content
+      const content = await fileSystemService.getFileContent(fileName)
+      const language = getFileLanguage(fileName)
+      
+      // Create new tab
+      const newTab: Tab = {
+        id: Date.now().toString(),
+        name: fileName.split('/').pop() || fileName,
+        path: fileName,
+        content,
+        isDirty: false,
+        language
+      }
+      
+      setTabs(prev => [...prev, newTab])
+      setActiveTabId(newTab.id)
+    } catch (error) {
+      console.error('Failed to load file:', error)
+    }
+  }, [tabs])
+
+  // Handle tab close
+  const handleTabClose = useCallback((tabId: string) => {
+    setTabs(prev => {
+      const newTabs = prev.filter(tab => tab.id !== tabId)
+      
+      // If closing active tab, switch to another tab
+      if (tabId === activeTabId && newTabs.length > 0) {
+        setActiveTabId(newTabs[0].id)
+      }
+      
+      return newTabs
+    })
+  }, [activeTabId])
+
+  // Handle content change
+  const handleContentChange = useCallback((content: string) => {
+    if (!activeTab) return
+    
+    setTabs(prev => prev.map(tab =>
+      tab.id === activeTabId
+        ? { ...tab, content, isDirty: tab.content !== content }
+        : tab
+    ))
+  }, [activeTab, activeTabId])
+
+  // Handle AI code application
+  const handleApplyCode = useCallback(async (code: string, fileName?: string) => {
+    const targetFile = fileName || activeTab?.path
+    if (!targetFile) return
+
+    try {
+      // Save to file system
+      await fileSystemService.saveFileContent(targetFile, code)
+      
+      // Update tab if it's open
+      const targetTab = tabs.find(tab => tab.path === targetFile)
+      if (targetTab) {
+        setTabs(prev => prev.map(tab =>
+          tab.path === targetFile
+            ? { ...tab, content: code, isDirty: false }
+            : tab
+        ))
+      }
+    } catch (error) {
+      console.error('Failed to apply code:', error)
+    }
+  }, [activeTab, tabs])
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + Shift + P - Command Palette
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') {
+        e.preventDefault()
+        setIsCommandPaletteOpen(true)
+      }
+      
+      // Ctrl/Cmd + ` - Toggle Terminal
+      if ((e.ctrlKey || e.metaKey) && e.key === '`') {
+        e.preventDefault()
+        setIsTerminalOpen(prev => !prev)
+      }
+      
+      // Ctrl/Cmd + Shift + F - Toggle Search
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F') {
+        e.preventDefault()
+        setIsSearchOpen(prev => !prev)
+      }
+      
+      // Ctrl/Cmd + Shift + C - Toggle AI Chat
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault()
+        setIsChatOpen(prev => !prev)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Helper function to get file language
+  const getFileLanguage = (fileName: string): string => {
+    const extension = fileName.split('.').pop()?.toLowerCase()
+    const languageMap: Record<string, string> = {
+      'js': 'javascript',
+      'jsx': 'javascript',
+      'ts': 'typescript',
+      'tsx': 'typescript',
+      'py': 'python',
+      'html': 'html',
+      'css': 'css',
+      'json': 'json',
+      'md': 'markdown'
+    }
+    return languageMap[extension || ''] || 'plaintext'
   }
 
-  const handleSave = useCallback(() => {
-    // TODO: Implement save functionality
-    console.log('Save file')
-  }, [])
-
-  const handleNewFile = useCallback(() => {
-    // TODO: Implement new file functionality
-    console.log('New file')
-  }, [])
-
-  const handleOpenFile = useCallback(() => {
-    // TODO: Implement open file functionality
-    console.log('Open file')
-  }, [])
-
-  const handleCopy = useCallback(() => {
-    document.execCommand('copy')
-  }, [])
-
-  const handleRefresh = useCallback(() => {
-    window.location.reload()
-  }, [])
-
   return (
-    <div className="h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-      <MenuBar 
-        onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
-        onToggleTerminal={() => setIsTerminalOpen(!isTerminalOpen)}
-        onSave={handleSave}
-        onNewFile={handleNewFile}
-        onOpenFile={handleOpenFile}
-      />
+    <div className={`h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900 ${className}`}>
+      {/* Menu Bar */}
+      <MenuBar />
+      
+      {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar */}
-        {isSidebarVisible && (
-          <motion.div
-            initial={{ x: -300 }}
-            animate={{ x: 0 }}
-            transition={{ duration: 0.3 }}
-            className="w-64 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 flex flex-col z-10"
-          >
-            {/* Sidebar Header */}
-            <div className="h-12 flex items-center justify-between px-4 border-b border-neutral-200 dark:border-neutral-700">
-              <h2 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                VibeFlow
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleTheme}
-                  className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-                >
-                  {theme === 'dark' ? (
-                    <SunIcon className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
-                  ) : (
-                    <MoonIcon className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
-                  )}
-                </button>
-                <button className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
-                  <Cog6ToothIcon className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
-                </button>
-              </div>
-            </div>
+        {/* Sidebar */}
+        <div 
+          className="flex-shrink-0 border-r border-neutral-200 dark:border-neutral-700"
+          style={{ width: sidebarWidth }}
+        >
+          <Sidebar 
+            onFileSelect={handleFileSelect}
+            fileTree={availableFiles.map(file => ({
+              name: file,
+              path: file,
+              type: 'file' as const,
+              children: []
+            }))}
+          />
+        </div>
 
-            {/* Sidebar Content */}
-            <Sidebar onFileSelect={setActiveFile} />
-          </motion.div>
-        )}
+        {/* Editor Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Tab Bar */}
+          <TabBar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onTabSelect={setActiveTabId}
+            onTabClose={handleTabClose}
+            onNewTab={() => {
+              const newTabId = `untitled-${Date.now()}`
+              const newTab: Tab = {
+                id: newTabId,
+                name: 'Untitled',
+                path: newTabId,
+                content: '',
+                isDirty: false,
+                language: 'plaintext'
+              }
+              setTabs(prev => [...prev, newTab])
+              setActiveTabId(newTabId)
+            }}
+          />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Top Bar */}
-          <div className="h-12 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
-            <div className="flex items-center gap-4 px-4">
-              {activeFile && (
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary-500 rounded-full" />
-                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    {activeFile}
-                  </span>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center">
-              <Toolbar 
-                onCopy={handleCopy}
-                onSearch={() => setIsSearchOpen(true)}
-                onSourceControl={() => setIsSourceControlOpen(true)}
-                onRefresh={handleRefresh}
-              />
-              <div className="flex items-center gap-2 px-4">
-                <button
-                  onClick={() => setIsChatOpen(!isChatOpen)}
-                  className={`
-                    p-2 rounded-lg transition-colors
-                    ${isChatOpen 
-                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400' 
-                      : 'hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
-                    }
-                  `}
-                >
-                  <ChatBubbleLeftIcon className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setIsTerminalOpen(!isTerminalOpen)}
-                  className={`
-                    p-2 rounded-lg transition-colors
-                    ${isTerminalOpen 
-                      ? 'bg-secondary-100 dark:bg-secondary-900 text-secondary-600 dark:text-secondary-400' 
-                      : 'hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
-                    }
-                  `}
-                >
-                  <CommandLineIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Editor and Panels Area */}
-          <div className="flex-1 flex relative overflow-hidden">
+          {/* Editor Content */}
+          <div className="flex-1 flex overflow-hidden">
             {/* Monaco Editor */}
-            <div className={`
-              flex-1 transition-all duration-300
-              ${isChatOpen ? 'w-[calc(100%-320px)]' : 'w-full'}
-              ${isSearchOpen || isSourceControlOpen ? 'w-[calc(100%-320px)]' : ''}
-            `}>
-              <MonacoEditor 
-                activeFile={activeFile}
-                onFileChange={setActiveFile}
+            <div className="flex-1 relative">
+              <MonacoEditor
+                activeFile={activeTab?.path ?? null}
+                fileContent={activeTab?.content ?? ''}
+                onFileChange={handleFileSelect}
+                onContentChange={handleContentChange}
+                onOpenComposer={() => setIsComposerOpen(true)}
               />
+              
+              {/* AI Features Indicator */}
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-primary-500 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg"
+                >
+                  <SparklesIcon className="w-3 h-3" />
+                  AI-Powered
+                </motion.div>
+              </div>
             </div>
 
-            {/* Search Panel */}
-            {isSearchOpen && (
-              <motion.div
-                initial={{ x: 320 }}
-                animate={{ x: 0 }}
-                exit={{ x: 320 }}
-                transition={{ duration: 0.3 }}
-                className="w-80 absolute right-0 top-0 bottom-0 border-l border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 z-20"
-              >
-                <SearchPanel onClose={() => setIsSearchOpen(false)} />
-              </motion.div>
-            )}
-
-            {/* Source Control Panel */}
-            {isSourceControlOpen && (
-              <motion.div
-                initial={{ x: 320 }}
-                animate={{ x: 0 }}
-                exit={{ x: 320 }}
-                transition={{ duration: 0.3 }}
-                className="w-80 absolute right-0 top-0 bottom-0 border-l border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 z-20"
-              >
-                <SourceControlPanel onClose={() => setIsSourceControlOpen(false)} />
-              </motion.div>
-            )}
-
-            {/* Chat Panel */}
-            {isChatOpen && (
-              <motion.div
-                initial={{ x: 320 }}
-                animate={{ x: 0 }}
-                exit={{ x: 320 }}
-                transition={{ duration: 0.3 }}
-                className="w-80 absolute right-0 top-0 bottom-0 border-l border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 z-20"
-              >
-                <ChatPanel onClose={() => setIsChatOpen(false)} />
-              </motion.div>
-            )}
+            {/* AI Chat Panel */}
+            <AnimatePresence>
+              {isChatOpen && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: chatWidth, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="flex-shrink-0 overflow-hidden"
+                >
+                  <EnhancedAIChat
+                    isOpen={isChatOpen}
+                    onClose={() => setIsChatOpen(false)}
+                    currentFile={activeTab?.path ?? null}
+                    fileContent={activeTab?.content ?? ''}
+                    onApplyCode={(code: string, fileName?: string) => {
+                      if (fileName && activeTab) {
+                        handleContentChange(code)
+                      }
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Terminal */}
-          {isTerminalOpen && (
-            <motion.div
-              initial={{ y: 200 }}
-              animate={{ y: 0 }}
-              exit={{ y: 200 }}
-              transition={{ duration: 0.3 }}
-              className="h-48 border-t border-neutral-200 dark:border-neutral-700 z-30"
-            >
-              <Terminal onClose={() => setIsTerminalOpen(false)} />
-            </motion.div>
-          )}
+          {/* Bottom Panels */}
+          <AnimatePresence>
+            {(isTerminalOpen || isSearchOpen) && (
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: 300 }}
+                exit={{ height: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="border-t border-neutral-200 dark:border-neutral-700 overflow-hidden"
+              >
+                {isTerminalOpen && (
+                  <Terminal onClose={() => setIsTerminalOpen(false)} />
+                )}
+                {isSearchOpen && (
+                  <SearchPanel onClose={() => setIsSearchOpen(false)} />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
+
+      {/* Status Bar */}
+      <StatusBar
+        activeFile={activeTab?.name}
+        language={activeTab?.language}
+        isDirty={activeTab?.isDirty}
+        onToggleChat={() => setIsChatOpen(prev => !prev)}
+        onToggleTerminal={() => setIsTerminalOpen(prev => !prev)}
+        isChatOpen={isChatOpen}
+        isTerminalOpen={isTerminalOpen}
+      />
+
+      {/* Floating Action Button for AI Chat */}
+      {!isChatOpen && (
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsChatOpen(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg flex items-center justify-center z-50"
+        >
+          <ChatBubbleLeftRightIcon className="w-6 h-6" />
+        </motion.button>
+      )}
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onFileSelect={handleFileSelect}
+        availableFiles={availableFiles}
+      />
+
+      {/* Composer Mode Modal */}
+      <ComposerMode
+        isOpen={isComposerOpen}
+        onClose={() => setIsComposerOpen(false)}
+        onFileChange={handleFileSelect}
+        onContentChange={handleContentChange}
+      />
+
+      {/* Settings Panel */}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <SettingsPanel
+              isOpen={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
-} 
+}

@@ -17,8 +17,15 @@ export const FileNodeSchema = z.lazy(() => z.object({
 // ============================================================================
 // AI Types
 // ============================================================================
-export const AIModelSchema = z.enum(['claude-3.5-sonnet', 'gpt-4o', 'gpt-4-turbo', 'local-llama']);
-export const AIProviderSchema = z.enum(['anthropic', 'openai', 'openrouter', 'local']);
+export const AIModelSchema = z.enum([
+    'claude-4',
+    'claude-3.5',
+    'claude-opus',
+    'gpt-4.1-nano',
+    'gpt-4-vision',
+    'dalle-3'
+]);
+export const AIProviderTypeSchema = z.enum(['anthropic', 'openai', 'openrouter', 'local']);
 export const MessageRoleSchema = z.enum(['user', 'assistant', 'system']);
 export const MessageSchema = z.object({
     id: z.string(),
@@ -149,22 +156,25 @@ export const ProjectSchema = z.object({
 // ============================================================================
 export const CodeContextSchema = z.object({
     filePath: z.string(),
-    language: LanguageSchema,
     content: z.string(),
+    chunks: z.array(z.any()).optional(),
+    language: LanguageSchema.optional(),
     functions: z.array(z.string()),
     classes: z.array(z.string()),
     imports: z.array(z.string()),
     exports: z.array(z.string()),
-    dependencies: z.array(z.string()),
-    symbols: z.array(z.string()),
+    variables: z.array(z.string()).optional(),
+    dependencies: z.array(z.string()).optional(),
+    symbols: z.array(z.string()).optional(),
 });
 export const ContextChunkSchema = z.object({
     id: z.string(),
     content: z.string(),
-    filePath: z.string(),
     startLine: z.number(),
     endLine: z.number(),
-    language: LanguageSchema,
+    type: z.string(),
+    filePath: z.string().optional(),
+    language: LanguageSchema.optional(),
     embedding: z.array(z.number()).optional(),
     metadata: z.record(z.any()).optional(),
 });
@@ -173,8 +183,9 @@ export const ContextChunkSchema = z.object({
 // ============================================================================
 export const AgentModeSchema = z.enum(['agent', 'autopilot']);
 export const AgentTaskTypeSchema = z.enum([
-    'code-generation',
-    'code-completion',
+    'code_generation',
+    'code_completion',
+    'code_review',
     'debugging',
     'refactoring',
     'testing',
@@ -186,12 +197,13 @@ export const AgentTaskSchema = z.object({
     id: z.string(),
     type: AgentTaskTypeSchema,
     description: z.string(),
-    context: z.string().optional(),
+    context: z.any().optional(),
     files: z.array(z.string()).optional(),
-    status: z.enum(['pending', 'in-progress', 'completed', 'failed']),
+    status: z.enum(['pending', 'running', 'completed', 'failed']),
     result: z.string().optional(),
     error: z.string().optional(),
     createdAt: z.date(),
+    startedAt: z.date().optional(),
     completedAt: z.date().optional(),
 });
 // ============================================================================
@@ -213,7 +225,7 @@ export const DiagnosticSchema = z.object({
 export const AppSettingsSchema = z.object({
     editor: EditorSettingsSchema,
     ai: z.object({
-        defaultModel: AIModelSchema.default('claude-3.5-sonnet'),
+        defaultModel: AIModelSchema.default('claude-4'),
         temperature: z.number().min(0).max(2).default(0.7),
         maxTokens: z.number().default(4000),
         contextWindow: z.number().default(200000),

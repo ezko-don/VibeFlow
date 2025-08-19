@@ -21,13 +21,19 @@
   },
   "devDependencies": {
     "@turbo/gen": "^1.10.12",
-    "turbo": "^1.10.12",
-    "prettier": "^3.0.0",
     "@types/node": "^20.0.0",
+    "prettier": "^3.0.0",
+    "turbo": "^1.10.12",
     "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "npm@10.0.0"
-} 
+  "packageManager": "npm@10.0.0",
+  "dependencies": {
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^15.6.1",
+    "remark-gfm": "^4.0.1"
+  }
+}

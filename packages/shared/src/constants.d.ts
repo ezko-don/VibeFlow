@@ -21,25 +21,35 @@ export declare const DEFAULT_TEMPERATURE = 0.7;
 export declare const DEFAULT_MAX_TOKENS = 4000;
 export declare const DEFAULT_CONTEXT_WINDOW = 200000;
 export declare const AI_MODEL_LIMITS: {
-    readonly 'claude-3.5-sonnet': {
+    readonly 'claude-4': {
         readonly maxTokens: 200000;
         readonly contextWindow: 200000;
         readonly costPer1kTokens: 0.003;
     };
-    readonly 'gpt-4o': {
-        readonly maxTokens: 128000;
-        readonly contextWindow: 128000;
+    readonly 'claude-3.5': {
+        readonly maxTokens: 200000;
+        readonly contextWindow: 200000;
+        readonly costPer1kTokens: 0.002;
+    };
+    readonly 'claude-opus': {
+        readonly maxTokens: 400000;
+        readonly contextWindow: 400000;
         readonly costPer1kTokens: 0.005;
     };
-    readonly 'gpt-4-turbo': {
+    readonly 'gpt-4.1-nano': {
         readonly maxTokens: 128000;
         readonly contextWindow: 128000;
-        readonly costPer1kTokens: 0.01;
+        readonly costPer1kTokens: 0.001;
     };
-    readonly 'local-llama': {
-        readonly maxTokens: 4096;
-        readonly contextWindow: 4096;
-        readonly costPer1kTokens: 0;
+    readonly 'gpt-4-vision': {
+        readonly maxTokens: 128000;
+        readonly contextWindow: 128000;
+        readonly costPer1kTokens: 0.004;
+    };
+    readonly 'dalle-3': {
+        readonly maxTokens: 0;
+        readonly contextWindow: 0;
+        readonly costPer1kTokens: 0.02;
     };
 };
 export declare const API_ENDPOINTS: {

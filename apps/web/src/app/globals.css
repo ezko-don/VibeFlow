@@ -145,4 +145,235 @@ body {
 /* Loading spinner */
 .spinner {
   @apply inline-block w-4 h-4 border-2 border-neutral-300 border-t-primary-500 rounded-full animate-spin;
-} 
+}
+
+/* AI Completion Ghost Text Styles */
+.ghost-text-suggestion {
+  color: #6b7280 !important;
+  opacity: 0.6 !important;
+  font-style: italic !important;
+  pointer-events: none !important;
+}
+
+.dark .ghost-text-suggestion {
+  color: #9ca3af !important;
+}
+
+/* AI Code Generation Modal Styles */
+.ai-generation-modal {
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.ai-generation-input {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.dark .ai-generation-input {
+  background: rgba(23, 23, 23, 0.95);
+  border: 1px solid #374151;
+}
+
+/* AI Generated Code Preview Styles */
+.ai-generated-preview {
+  color: #059669 !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-left: 2px solid #10b981 !important;
+  padding-left: 8px !important;
+  opacity: 0.8 !important;
+  font-style: italic !important;
+}
+
+.dark .ai-generated-preview {
+  color: #34d399 !important;
+  background: rgba(52, 211, 153, 0.1) !important;
+  border-left: 2px solid #34d399 !important;
+}
+
+.ai-generation-line {
+  background: rgba(16, 185, 129, 0.05) !important;
+}
+
+.dark .ai-generation-line {
+  background: rgba(52, 211, 153, 0.05) !important;
+}
+
+/* Smart Refactoring Decorations */
+.smart-refactoring-suggestion {
+  border-bottom: 2px dotted #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.smart-refactoring-suggestion-critical {
+  border-bottom-color: #dc2626 !important;
+  background: rgba(220, 38, 38, 0.15) !important;
+}
+
+.smart-refactoring-suggestion-high {
+  border-bottom-color: #ea580c !important;
+  background: rgba(234, 88, 12, 0.15) !important;
+}
+
+.smart-refactoring-suggestion-medium {
+  border-bottom-color: #d97706 !important;
+  background: rgba(217, 119, 6, 0.1) !important;
+}
+
+.smart-refactoring-suggestion-low {
+  border-bottom-color: #0ea5e9 !important;
+  background: rgba(14, 165, 233, 0.1) !important;
+}
+
+.smart-refactoring-bug {
+  border-bottom: 2px wavy #dc2626 !important;
+  background: rgba(220, 38, 38, 0.2) !important;
+}
+
+.smart-refactoring-bug-critical {
+  border-bottom-color: #991b1b !important;
+  background: rgba(153, 27, 27, 0.25) !important;
+}
+
+.smart-refactoring-bug-high {
+  border-bottom-color: #dc2626 !important;
+  background: rgba(220, 38, 38, 0.2) !important;
+}
+
+.smart-refactoring-bug-medium {
+  border-bottom-color: #ea580c !important;
+  background: rgba(234, 88, 12, 0.15) !important;
+}
+
+.smart-refactoring-bug-low {
+  border-bottom-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+/* Dark mode refactoring styles */
+.dark .smart-refactoring-suggestion {
+  background: rgba(59, 130, 246, 0.15) !important;
+}
+
+.dark .smart-refactoring-suggestion-critical {
+  background: rgba(220, 38, 38, 0.2) !important;
+}
+
+.dark .smart-refactoring-suggestion-high {
+  background: rgba(234, 88, 12, 0.2) !important;
+}
+
+.dark .smart-refactoring-suggestion-medium {
+  background: rgba(217, 119, 6, 0.15) !important;
+}
+
+.dark .smart-refactoring-suggestion-low {
+  background: rgba(14, 165, 233, 0.15) !important;
+}
+
+.dark .smart-refactoring-bug {
+  background: rgba(220, 38, 38, 0.25) !important;
+}
+
+.dark .smart-refactoring-bug-critical {
+  background: rgba(153, 27, 27, 0.3) !important;
+}
+
+.dark .smart-refactoring-bug-high {
+  background: rgba(220, 38, 38, 0.25) !important;
+}
+
+.dark .smart-refactoring-bug-medium {
+  background: rgba(234, 88, 12, 0.2) !important;
+}
+
+.dark .smart-refactoring-bug-low {
+  background: rgba(245, 158, 11, 0.15) !important;
+}
+
+/* Code explanation tooltip animations */
+.code-explanation-tooltip {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) translateX(-50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(-50%);
+  }
+}
+
+/* Composer mode gradient backgrounds */
+.composer-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.composer-gradient-purple {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+}
+
+/* Test generation styles */
+.test-generation-highlight {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-left: 3px solid #22c55e !important;
+  padding-left: 8px !important;
+}
+
+.dark .test-generation-highlight {
+  background: rgba(34, 197, 94, 0.15) !important;
+}
+
+/* Advanced AI features indicator */
+.ai-features-badge {
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Floating panels shadow */
+.floating-panel {
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.dark .floating-panel {
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.4),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Smooth transitions for all AI features */
+.ai-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover effects for interactive elements */
+.ai-interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dark .ai-interactive:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}

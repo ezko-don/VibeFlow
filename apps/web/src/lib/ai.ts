@@ -1,10 +1,12 @@
+import type { AIModel, AIProviderInterface } from '@vibeflow/shared'
+
 // Local Message type definition (temporary until shared package is properly set up)
-interface Message {
+export interface Message {
   id: string
-  role: 'user' | 'assistant' | 'system'
+  role: 'user' | 'assistant'
   content: string
   timestamp: Date
-  model?: string
+  model?: AIModel
   tokens?: number
 }
 
@@ -26,12 +28,27 @@ declare global {
   }
 }
 
+export interface AIStatus {
+  available: boolean
+  rateLimits?: {
+    note: string
+  }
+}
+
 /**
  * AI Service for VibeFlow Web App
- * Uses Puter.js for free unlimited Claude API access
  */
-export class AIService {
+export class AIService implements AIProviderInterface {
   private static instance: AIService | null = null
+  name = 'AI Service'
+  models: AIModel[] = [
+    'claude-4',
+    'claude-3.5',
+    'claude-opus',
+    'gpt-4.1-nano',
+    'gpt-4-vision',
+    'dalle-3'
+  ]
 
   static getInstance(): AIService {
     if (!AIService.instance) {
@@ -40,105 +57,55 @@ export class AIService {
     return AIService.instance
   }
 
-  private constructor() {}
-
-  /**
-   * Check if Puter.js is available
-   */
   isAvailable(): boolean {
     return typeof window !== 'undefined' && 
-           typeof window.puter !== 'undefined' && 
-           typeof window.puter.ai !== 'undefined' &&
+           'puter' in window && 
+           window.puter && 
+           window.puter.ai && 
            typeof window.puter.ai.chat === 'function'
   }
 
-  /**
-   * Convert messages to a single prompt for Puter.js
-   */
+  getStatus(): AIStatus {
+    return {
+      available: this.isAvailable(),
+      rateLimits: this.isAvailable() ? { note: 'Ready' } : undefined
+    }
+  }
+
   private messagesToPrompt(messages: Message[]): string {
     return messages
-      .filter(msg => msg.role !== 'system') // Skip system messages for now
-      .map(msg => {
-        if (msg.role === 'user') {
-          return `Human: ${msg.content}`
-        } else {
-          return `Assistant: ${msg.content}`
-        }
-      })
+      .map(m => `${m.role === 'user' ? 'Human' : 'Assistant'}: ${m.content}`)
       .join('\n\n') + '\n\nAssistant:'
   }
 
-  /**
-   * Extract content from Puter.js response
-   */
   private extractContent(response: any): string {
-    console.log('🔍 Raw Puter.js response:', response)
-    
-    // Handle the actual Puter.js format: r.message.content[0].text
-    if (response && response.message && response.message.content && Array.isArray(response.message.content)) {
-      const content = response.message.content[0]
-      if (content && content.text && typeof content.text === 'string') {
-        return content.text
+    try {
+      if (response?.message?.content?.[0]?.text) {
+        return response.message.content[0].text
       }
+      if (typeof response === 'string') {
+        return response
+      }
+      throw new Error('Unable to extract content from response')
+    } catch (error) {
+      console.error('Error extracting content:', error)
+      throw error
     }
-    
-    // Handle direct string response
-    if (typeof response === 'string') {
-      return response
-    }
-    
-    // Handle object response with message property (fallback)
-    if (response && typeof response === 'object') {
-      if (response.message && typeof response.message === 'string') {
-        return response.message
-      }
-      
-      // Handle OpenAI-style response (fallback)
-      if (response.choices && Array.isArray(response.choices) && response.choices.length > 0) {
-        const choice = response.choices[0]
-        if (choice.message && choice.message.content) {
-          return choice.message.content
-        }
-        if (choice.text) {
-          return choice.text
-        }
-      }
-      
-      // Handle direct content property (fallback)
-      if (response.content && typeof response.content === 'string') {
-        return response.content
-      }
-      
-      // Handle text property (fallback)
-      if (response.text && typeof response.text === 'string') {
-        return response.text
-      }
-    }
-    
-    // If we can't extract content, throw an error with detailed info
-    const responseInfo = typeof response === 'object' && response ? {
-      keys: Object.keys(response),
-      messageKeys: response.message ? Object.keys(response.message) : null,
-      contentLength: response.message?.content?.length || null,
-      firstContentKeys: response.message?.content?.[0] ? Object.keys(response.message.content[0]) : null
-    } : null
-    
-    throw new Error(`Unable to extract content from response. Response type: ${typeof response}, structure: ${JSON.stringify(responseInfo, null, 2)}`)
   }
 
   /**
-   * Send a message to AI via Puter.js
+   * Send a message to AI
    */
   async sendMessage(
     messages: Message[], 
-    model: 'claude-3.5-sonnet' | 'gpt-4o' = 'claude-3.5-sonnet',
+    model: AIModel = 'claude-4',
     options: {
       temperature?: number
       maxTokens?: number
     } = {}
   ): Promise<{
     content: string
-    model: string
+    model: AIModel
     tokens?: {
       prompt: number
       completion: number
@@ -146,7 +113,7 @@ export class AIService {
     }
   }> {
     if (!this.isAvailable()) {
-      throw new Error('Puter.js is not available. Please ensure the script is loaded and try again.')
+      throw new Error('AI service is not available. Please ensure the script is loaded and try again.')
     }
 
     try {
@@ -154,20 +121,24 @@ export class AIService {
       const prompt = this.messagesToPrompt(messages)
 
       // Map our model names to Puter.js model names
-      const modelMap: Record<string, string> = {
-        'claude-3.5-sonnet': 'claude-sonnet-4',
-        'gpt-4o': 'gpt-4o'
+      const modelMap: Record<AIModel, string> = {
+        'claude-4': 'claude-sonnet-4',
+        'claude-3.5': 'claude-3-5-sonnet',
+        'claude-opus': 'claude-opus-4',
+        'gpt-4.1-nano': 'gpt-4-nano',
+        'gpt-4-vision': 'gpt-4-vision',
+        'dalle-3': 'dalle-3'
       }
 
-      const puterModel = modelMap[model] || 'claude-3-5-sonnet'
+      const puterModel = modelMap[model] || 'claude-sonnet-4'
 
-      console.log('🤖 Sending request to Puter.js:', {
+      console.log('🤖 Sending request to AI:', {
         model: puterModel,
         promptLength: prompt.length,
         prompt: prompt.substring(0, 100) + '...'
       })
 
-      // Send request using simplified Puter.js API
+      // Send request using Puter.js API
       const rawResponse = await window.puter.ai.chat(prompt, {
         model: puterModel,
         temperature: options.temperature || 0.7,
@@ -178,15 +149,15 @@ export class AIService {
       // Extract content from response
       const content = this.extractContent(rawResponse)
 
-      console.log('✅ Processed response from Puter.js:', content.substring(0, 100) + '...')
+      console.log('✅ Processed response:', content.substring(0, 100) + '...')
 
       return {
         content,
         model: model,
-        tokens: undefined // Puter.js simplified API doesn't return token counts
+        tokens: undefined // Token counts not available
       }
     } catch (error) {
-      console.error('❌ Puter.js AI request failed:', error)
+      console.error('❌ AI request failed:', error)
       
       // Provide helpful error messages
       if (error instanceof Error) {
@@ -212,24 +183,28 @@ export class AIService {
    */
   async *streamMessage(
     messages: Message[], 
-    model: 'claude-3.5-sonnet' | 'gpt-4o' = 'claude-3.5-sonnet',
+    model: AIModel = 'claude-4',
     options: {
       temperature?: number
       maxTokens?: number
     } = {}
   ): AsyncIterable<{ delta: string; content: string; done: boolean }> {
     if (!this.isAvailable()) {
-      throw new Error('Puter.js is not available. Please ensure the script is loaded and try again.')
+      throw new Error('AI service is not available. Please ensure the script is loaded and try again.')
     }
 
     try {
       const prompt = this.messagesToPrompt(messages)
-      const modelMap: Record<string, string> = {
-        'claude-3.5-sonnet': 'claude-sonnet-4',
-        'gpt-4o': 'gpt-4o'
+      const modelMap: Record<AIModel, string> = {
+        'claude-4': 'claude-sonnet-4',
+        'claude-3.5': 'claude-3-5-sonnet',
+        'claude-opus': 'claude-opus-4',
+        'gpt-4.1-nano': 'gpt-4-nano',
+        'gpt-4-vision': 'gpt-4-vision',
+        'dalle-3': 'dalle-3'
       }
 
-      const puterModel = modelMap[model] || 'claude-3-5-sonnet'
+      const puterModel = modelMap[model] || 'claude-sonnet-4'
 
       const response = await window.puter.ai.chat(prompt, {
         model: puterModel,
@@ -287,48 +262,43 @@ export class AIService {
   /**
    * Get available models
    */
-  getAvailableModels(): Array<{ id: string; name: string; provider: string }> {
+  getAvailableModels(): Array<{ id: AIModel; name: string; provider: string }> {
     if (!this.isAvailable()) {
       return []
     }
 
     return [
       {
-        id: 'claude-3.5-sonnet',
-        name: 'Claude Sonnet 4',
-        provider: 'Puter.js (Free)'
+        id: 'claude-4',
+        name: 'Claude 4',
+        provider: 'Free'
       },
       {
-        id: 'gpt-4o',
-        name: 'GPT-4o',
-        provider: 'Puter.js (Free)'
+        id: 'claude-3.5',
+        name: 'Claude 3.5',
+        provider: 'Free'
+      },
+      {
+        id: 'claude-opus',
+        name: 'Claude Opus',
+        provider: 'Free'
+      },
+      {
+        id: 'gpt-4.1-nano',
+        name: 'GPT-4.1 Nano',
+        provider: 'Free'
+      },
+      {
+        id: 'gpt-4-vision',
+        name: 'GPT-4 Vision',
+        provider: 'Free'
+      },
+      {
+        id: 'dalle-3',
+        name: 'DALL·E 3',
+        provider: 'Free'
       }
     ]
-  }
-
-  /**
-   * Check service status
-   */
-  getStatus(): {
-    available: boolean
-    provider: string
-    models: number
-    rateLimits?: {
-      unlimited: boolean
-      note: string
-    }
-  } {
-    const available = this.isAvailable()
-    
-    return {
-      available,
-      provider: available ? 'Puter.js' : 'Not loaded',
-      models: available ? this.getAvailableModels().length : 0,
-      rateLimits: available ? {
-        unlimited: true,
-        note: 'User pays model - unlimited usage'
-      } : undefined
-    }
   }
 }
 

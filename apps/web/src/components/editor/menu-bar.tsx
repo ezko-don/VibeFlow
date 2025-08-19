@@ -3,10 +3,11 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useKeyboardShortcuts, type ShortcutHandler } from '@/hooks/use-keyboard-shortcuts'
 
 interface MenuItem {
-  label: string
-  action?: () => void
+  label?: string
   shortcut?: string
+  action?: () => void
   submenu?: MenuItem[]
+  type?: 'separator'
 }
 
 interface MenuBarProps {
@@ -15,6 +16,9 @@ interface MenuBarProps {
   onSave?: () => void
   onNewFile?: () => void
   onOpenFile?: () => void
+  onOpenFolder?: () => void
+  onSaveAs?: () => void
+  onCloseEditor?: () => void
 }
 
 export function MenuBar({
@@ -22,7 +26,10 @@ export function MenuBar({
   onToggleTerminal,
   onSave,
   onNewFile,
-  onOpenFile
+  onOpenFile,
+  onOpenFolder,
+  onSaveAs,
+  onCloseEditor
 }: MenuBarProps) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
 
@@ -52,12 +59,27 @@ export function MenuBar({
           action: onOpenFile
         },
         { 
+          label: 'Open Folder...', 
+          shortcut: 'Ctrl+K Ctrl+O',
+          action: onOpenFolder
+        },
+        { type: 'separator' },
+        { 
           label: 'Save', 
           shortcut: 'Ctrl+S',
           action: onSave
         },
-        { label: 'Save As...', shortcut: 'Ctrl+Shift+S' },
-        { label: 'Close Editor', shortcut: 'Ctrl+W' }
+        { 
+          label: 'Save As...', 
+          shortcut: 'Ctrl+Shift+S',
+          action: onSaveAs
+        },
+        { type: 'separator' },
+        { 
+          label: 'Close Editor', 
+          shortcut: 'Ctrl+W',
+          action: onCloseEditor
+        }
       ]
     },
     {

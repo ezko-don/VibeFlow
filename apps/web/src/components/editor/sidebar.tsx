@@ -1,89 +1,61 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   FolderIcon,
   FolderOpenIcon,
   DocumentIcon,
   PlusIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline'
-
-interface SidebarProps {
-  onFileSelect: (fileName: string) => void
-}
 
 interface FileNode {
   name: string
   type: 'file' | 'folder'
   children?: FileNode[]
+  path: string
   isOpen?: boolean
 }
 
-const mockFileTree: FileNode[] = [
-  {
-    name: 'src',
-    type: 'folder',
-    isOpen: true,
-    children: [
-      {
-        name: 'components',
-        type: 'folder',
-        isOpen: false,
-        children: [
-          { name: 'Button.tsx', type: 'file' },
-          { name: 'Input.tsx', type: 'file' },
-        ]
-      },
-      {
-        name: 'pages',
-        type: 'folder',
-        isOpen: false,
-        children: [
-          { name: 'index.tsx', type: 'file' },
-          { name: 'about.tsx', type: 'file' },
-        ]
-      },
-      { name: 'App.tsx', type: 'file' },
-      { name: 'main.tsx', type: 'file' },
-    ]
-  },
-  { name: 'package.json', type: 'file' },
-  { name: 'README.md', type: 'file' },
-  { name: 'tsconfig.json', type: 'file' },
-]
+interface SidebarProps {
+  fileTree: FileNode[]
+  onFileSelect: (filePath: string) => void
+}
 
-export function Sidebar({ onFileSelect }: SidebarProps) {
-  const [fileTree, setFileTree] = useState<FileNode[]>(mockFileTree)
+export function Sidebar({ fileTree, onFileSelect }: SidebarProps) {
+  const [localFileTree, setLocalFileTree] = useState<FileNode[]>(fileTree)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const toggleFolder = (path: string[]) => {
-    const updateTree = (nodes: FileNode[], currentPath: string[] = []): FileNode[] => {
+  // Update local tree when prop changes
+  useEffect(() => {
+    setLocalFileTree(fileTree)
+  }, [fileTree])
+
+  const toggleFolder = (path: string) => {
+    const updateTree = (nodes: FileNode[]): FileNode[] => {
       return nodes.map(node => {
-        const nodePath = [...currentPath, node.name]
-        
-        if (nodePath.join('/') === path.join('/') && node.type === 'folder') {
+        if (node.path === path && node.type === 'folder') {
           return { ...node, isOpen: !node.isOpen }
         }
         
         if (node.children) {
-          return { ...node, children: updateTree(node.children, nodePath) }
+          return { ...node, children: updateTree(node.children) }
         }
         
         return node
       })
     }
     
-    setFileTree(updateTree(fileTree))
+    setLocalFileTree(updateTree(localFileTree))
   }
 
-  const renderFileNode = (node: FileNode, path: string[] = [], depth: number = 0) => {
+  const renderFileNode = (node: FileNode, depth: number = 0) => {
     const isFolder = node.type === 'folder'
-    const currentPath = [...path, node.name]
     
     return (
-      <div key={currentPath.join('/')}>
+      <div key={node.path}>
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -96,9 +68,9 @@ export function Sidebar({ onFileSelect }: SidebarProps) {
           style={{ paddingLeft: `${8 + depth * 16}px` }}
           onClick={() => {
             if (isFolder) {
-              toggleFolder(currentPath)
+              toggleFolder(node.path)
             } else {
-              onFileSelect(node.name)
+              onFileSelect(node.path)
             }
           }}
         >
@@ -125,7 +97,7 @@ export function Sidebar({ onFileSelect }: SidebarProps) {
             transition={{ duration: 0.2 }}
           >
             {node.children.map(child => 
-              renderFileNode(child, currentPath, depth + 1)
+              renderFileNode(child, depth + 1)
             )}
           </motion.div>
         )}
@@ -133,10 +105,31 @@ export function Sidebar({ onFileSelect }: SidebarProps) {
     )
   }
 
-  const filteredTree = fileTree.filter(node => 
-    searchQuery === '' || 
-    node.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filterTree = (nodes: FileNode[], query: string): FileNode[] => {
+    return nodes.filter(node => {
+      const matchesName = node.name.toLowerCase().includes(query.toLowerCase())
+      
+      if (node.children) {
+        const filteredChildren = filterTree(node.children, query)
+        if (filteredChildren.length > 0) {
+          return true
+        }
+      }
+      
+      return matchesName
+    }).map(node => {
+      if (node.children) {
+        return {
+          ...node,
+          children: filterTree(node.children, query),
+          isOpen: query ? true : node.isOpen // Auto-expand when searching
+        }
+      }
+      return node
+    })
+  }
+
+  const filteredTree = filterTree(localFileTree, searchQuery)
 
   return (
     <div className="flex-1 flex flex-col">
@@ -159,8 +152,11 @@ export function Sidebar({ onFileSelect }: SidebarProps) {
         <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wide">
           Explorer
         </span>
-        <button className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
-          <PlusIcon className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+        <button 
+          className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          onClick={() => setLocalFileTree(fileTree)} // Reset file tree
+        >
+          <ArrowPathIcon className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
         </button>
       </div>
 
@@ -169,7 +165,9 @@ export function Sidebar({ onFileSelect }: SidebarProps) {
         {filteredTree.length === 0 ? (
           <div className="text-center py-8 text-neutral-500 dark:text-neutral-400">
             <FolderIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No files found</p>
+            <p className="text-sm">
+              {searchQuery ? 'No matching files' : 'No files in workspace'}
+            </p>
           </div>
         ) : (
           filteredTree.map(node => renderFileNode(node))

@@ -60,16 +60,25 @@ declare global {
  */
 export class PuterProvider implements LLMProvider {
   name: AIProvider = 'local' // Using 'local' since it's client-side
-  models: AIModel[] = ['claude-3.5-sonnet']
+  models: AIModel[] = [
+    'claude-4',
+    'claude-3.5',
+    'claude-opus',
+    'gpt-4.1-nano',
+    'gpt-4-vision',
+    'dalle-3'
+  ]
 
   private mapModel(model: AIModel): string {
     const modelMap: Record<AIModel, string> = {
-      'claude-3.5-sonnet': 'claude-3-5-sonnet',
-      'gpt-4o': 'gpt-4',
-      'gpt-4-turbo': 'gpt-4',
-      'local-llama': 'claude-3-5-sonnet', // Fallback to Claude
+      'claude-4': 'claude-sonnet-4',
+      'claude-3.5': 'claude-3-5-sonnet',
+      'claude-opus': 'claude-opus-4',
+      'gpt-4.1-nano': 'gpt-4-nano',
+      'gpt-4-vision': 'gpt-4-vision',
+      'dalle-3': 'dalle-3'
     }
-    return modelMap[model] || 'claude-3-5-sonnet'
+    return modelMap[model] || 'claude-sonnet-4'
   }
 
   async isAvailable(): Promise<boolean> {

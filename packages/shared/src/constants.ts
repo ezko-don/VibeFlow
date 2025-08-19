@@ -50,40 +50,52 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 // ============================================================================
 
 export const AI_MODELS: AIModel[] = [
-  'claude-3.5-sonnet',
-  'gpt-4o',
-  'gpt-4-turbo',
-  'local-llama'
+  'claude-4',
+  'claude-3.5',
+  'claude-opus',
+  'gpt-4.1-nano',
+  'gpt-4-vision',
+  'dalle-3'
 ]
 
 export const AI_PROVIDERS = ['anthropic', 'openai', 'openrouter', 'local'] as const
 
-export const DEFAULT_AI_MODEL: AIModel = 'claude-3.5-sonnet'
+export const DEFAULT_AI_MODEL: AIModel = 'claude-4'
 export const DEFAULT_TEMPERATURE = 0.7
 export const DEFAULT_MAX_TOKENS = 4000
 export const DEFAULT_CONTEXT_WINDOW = 200000
 
 export const AI_MODEL_LIMITS = {
-  'claude-3.5-sonnet': {
+  'claude-4': {
     maxTokens: 200000,
     contextWindow: 200000,
     costPer1kTokens: 0.003,
   },
-  'gpt-4o': {
-    maxTokens: 128000,
-    contextWindow: 128000,
+  'claude-3.5': {
+    maxTokens: 200000,
+    contextWindow: 200000,
+    costPer1kTokens: 0.002,
+  },
+  'claude-opus': {
+    maxTokens: 400000,
+    contextWindow: 400000,
     costPer1kTokens: 0.005,
   },
-  'gpt-4-turbo': {
+  'gpt-4.1-nano': {
     maxTokens: 128000,
     contextWindow: 128000,
-    costPer1kTokens: 0.01,
+    costPer1kTokens: 0.001,
   },
-  'local-llama': {
-    maxTokens: 4096,
-    contextWindow: 4096,
-    costPer1kTokens: 0,
+  'gpt-4-vision': {
+    maxTokens: 128000,
+    contextWindow: 128000,
+    costPer1kTokens: 0.004,
   },
+  'dalle-3': {
+    maxTokens: 0, // Not applicable for image generation
+    contextWindow: 0,
+    costPer1kTokens: 0.02, // Cost per image
+  }
 } as const
 
 // ============================================================================

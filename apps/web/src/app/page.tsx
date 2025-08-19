@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { EditorLayout } from '@/components/editor/editor-layout'
+import { EnhancedEditorLayout } from '@/components/editor/enhanced-editor-layout'
 import { WelcomeScreen } from '@/components/welcome/welcome-screen'
 
 export default function HomePage() {
@@ -34,7 +34,7 @@ export default function HomePage() {
       transition={{ duration: 0.5 }}
       className="h-screen flex flex-col"
     >
-      <EditorLayout />
+      <EnhancedEditorLayout />
     </motion.div>
   )
 } 
