@@ -42,14 +42,52 @@ export function MonacoEditor({
     monacoRef.current = monaco
     setIsEditorReady(true)
 
+    // Define Gruvbox Dark theme
+    monaco.editor.defineTheme('gruvbox-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [
+        { token: 'comment', foreground: '928374', fontStyle: 'italic' },
+        { token: 'string', foreground: 'b8bb26' },
+        { token: 'keyword', foreground: 'fb4934' },
+        { token: 'number', foreground: 'd3869b' },
+        { token: 'type', foreground: 'fabd2f' },
+        { token: 'class', foreground: 'fabd2f' },
+        { token: 'function', foreground: '8ec07c' },
+        { token: 'variable', foreground: 'ebdbb2' },
+        { token: 'constant', foreground: 'd3869b' },
+        { token: 'parameter', foreground: 'fe8019' },
+        { token: 'identifier', foreground: 'ebdbb2' },
+        { token: 'operator', foreground: 'fb4934' },
+        { token: 'delimiter', foreground: 'ebdbb2' },
+        { token: 'tag', foreground: 'fb4934' },
+        { token: 'attribute.name', foreground: 'fabd2f' },
+        { token: 'attribute.value', foreground: 'b8bb26' }
+      ],
+      colors: {
+        'editor.background': '#282828',
+        'editor.foreground': '#ebdbb2',
+        'editor.lineHighlightBackground': '#3c3836',
+        'editorCursor.foreground': '#ebdbb2',
+        'editor.selectionBackground': '#665c54',
+        'editor.inactiveSelectionBackground': '#665c5480',
+        'minimap.background': '#282828',
+        'scrollbarSlider.background': '#665c5480',
+        'scrollbarSlider.hoverBackground': '#665c54a0',
+        'scrollbarSlider.activeBackground': '#665c54c0'
+      }
+    })
+
     // Configure editor options for better AI integration
     editor.updateOptions({
       minimap: {
-        enabled: true
+        enabled: true,
+        maxColumn: 100,
+        scale: 1
       },
       scrollBeyondLastLine: false,
       fontSize: 14,
-      lineHeight: 20,
+      lineHeight: 22,
       fontFamily: 'JetBrains Mono, Consolas, Monaco, "Courier New", monospace',
       renderWhitespace: 'selection',
       renderLineHighlight: 'all',
@@ -65,6 +103,9 @@ export function MonacoEditor({
         strings: true
       }
     })
+
+    // Set the Gruvbox theme
+    monaco.editor.setTheme('gruvbox-dark')
 
     // Add keyboard shortcuts
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
@@ -218,14 +259,14 @@ export function MonacoEditor({
         height="100%"
         language={getLanguageFromFileName(activeFile)}
         value={fileContent}
-        theme="vs-dark"
+        theme="gruvbox-dark"
         onMount={handleEditorDidMount}
         options={{
           automaticLayout: true,
           scrollBeyondLastLine: false,
-          minimap: { enabled: true },
+          minimap: { enabled: true, maxColumn: 100, scale: 1 },
           fontSize: 14,
-          lineHeight: 20,
+          lineHeight: 22,
           fontFamily: 'JetBrains Mono, Consolas, Monaco, "Courier New", monospace',
           renderWhitespace: 'selection',
           renderLineHighlight: 'all',

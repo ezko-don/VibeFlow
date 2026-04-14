@@ -1,18 +1,93 @@
 # VibeFlow 🚀
 
-A Cursor-like AI-powered code editor with **FREE unlimited Claude & GPT integration** using Puter.js.
+**Your Zed-Inspired AI-Powered Code Editor**
 
-![VibeFlow Logo](https://img.shields.io/badge/VibeFlow-AI%20Editor-22c55e?style=for-the-badge&logo=visualstudiocode)
+A blazing-fast, Zed-inspired code editor with **FREE unlimited Claude & GPT integration** using Puter.js. Experience the performance of Zed with the AI capabilities you love.
+
+![VibeFlow Logo](https://img.shields.io/badge/VibeFlow-Zed%20Inspired-22c55e?style=for-the-badge&logo=visualstudiocode)
 
 ## ✨ Features
 
-- 🎨 **Monaco Editor Integration** - VS Code-quality editing with syntax highlighting and IntelliSense
+### Core Editor - Zed-Inspired Design
+
+- 🎨 **Gruvbox Dark Theme** - Beautiful, eye-friendly syntax highlighting out of the box
+- ⚡ **Zed-Level Performance** - Optimized rendering with minimal latency
+- 🎯 **Project-Centric Workflow** - Fast project switching and workspace management
+- 🔍 **Fuzzy Search (Ctrl+P)** - Lightning-fast file and symbol navigation
+- 📝 **Inline AI Completions** - Ghost text suggestions as you type (Tab to accept)
+- 📊 **Minimap Panel** - Quick navigation through your code
+- ✨ **Smooth Animations** - Delightful Framer Motion transitions throughout
+
+### File Management
+
+- 📁 **Collapsible File Tree** - Organized directory structure with expand/collapse
+- 🏷️ **File Type Icons** - Color-coded icons for TypeScript, JavaScript, Python, Rust, etc.
+- 📋 **Multi-Tab System** - Multiple files open simultaneously with close buttons
+- 🔴 **Modified Indicators** - Visual dots showing unsaved changes
+- 🔢 **Line Numbers & Active Line Highlighting** - Easy code navigation
+- 🍞 **Breadcrumb Navigation** - See your current file path at a glance
+
+### AI Assistant Panel (Right Side)
+
+- 💬 **Live Chat** - Real-time conversation with your AI coding assistant
+- ⚡ **Quick Actions** - One-click buttons: Explain, Refactor, Debug, Tests
+- 🤔 **Thinking Animation** - Visual feedback while AI processes your request
+- 📝 **Code Snippets** - Beautifully rendered inline code blocks
+- 🎯 **Context-Aware** - AI understands your current file and project
+
+### Zed-Style Chrome
+
+- 🚦 **Traffic Light Buttons** - macOS-style window controls (top left)
+- 📄 **Title Bar** - Displays current file name prominently
+- 🌿 **Git Branch + Status Bar** - Repository status at bottom
+- 🎯 **Activity Bar Icons** - Explorer, Search, Git, Extensions, Settings
+- 🎭 **Mode Pills** - Edit / Collab / Channel modes in title bar
+
+### Full Terminal Panel
+
+- 💻 **Real Command History** - Use ↑/↓ arrows to navigate previous commands
+- 🔧 **Simulated Commands** - ls, cd, git status, npm, node, ts-node
+- ▶️ **Run Button** - Execute the current file directly
+- 📑 **Output & Problems Tabs** - Organized terminal output
+
+### Right-Click Context Menu
+
+- ✏️ **Rename** - Rename files and folders inline
+- 📋 **Copy Path** - Quick access to full file path
+- 📄 **New File** - Create files in any directory
+- 🗑️ **Delete** - Remove files and folders
+- 📄 **Copy/Cut/Paste** - Full clipboard operations
+
+### Keyboard Shortcuts (Zed-Style)
+
+| Action | Shortcut |
+|--------|----------|
+| Command Palette | `⌘K` or `Ctrl+K` |
+| Toggle Sidebar | `⌘B` or `Ctrl+B` |
+| Toggle Terminal | `⌘J` or `Ctrl+J` |
+| Toggle AI Panel | `⌘I` or `Ctrl+I` |
+| Split Pane | `⌘\` or `Ctrl+\` |
+| Quick File Search | `⌘P` or `Ctrl+P` |
+
+### Command Palette (⌘K)
+
+- 🔍 **Search Commands** - Find any action quickly
+- 📁 **Navigate Files** - Open files by name
+- 🤖 **Trigger AI Actions** - Access AI features instantly
+- ⌨️ **Keyboard Navigation** - Arrow keys to navigate, Enter to run
+
+### AI Integration
 - 🤖 **FREE AI Integration** - Unlimited Claude 3.5 Sonnet & GPT-4o via Puter.js (no API keys needed!)
+- 💬 **Context-Aware Chat** - AI assistant with file context and @mentions
+- 🔄 **Inline Edits** - Apply AI suggestions directly to your code
+- 🧠 **Smart Code Review** - Automatic code analysis and improvement suggestions
+
+### Developer Experience
 - 🌙 **Dark/Light Mode** - Beautiful themes that adapt to your preference
+- ⌨️ **Vim-Style Keybindings** - Optional modal editing (planned)
 - 📁 **File Explorer** - Intuitive file tree with search and navigation
-- 💬 **AI Chat Interface** - Real-time chat with Claude for coding assistance
-- 🖥️ **Integrated Terminal** - Built-in terminal for running commands
-- 🎭 **Framer Motion Animations** - Smooth, delightful animations throughout the UI
+- 💻 **Integrated Terminal** - Built-in terminal for running commands
+- 🎭 **Smooth Animations** - Delightful Framer Motion animations
 - 🎯 **Production Ready** - Built with TypeScript, Tailwind CSS, and modern best practices
 
 ## 🆓 Free AI Integration
