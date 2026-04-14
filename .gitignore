@@ -1,33 +1,76 @@
+```
 # Dependencies
 node_modules/
-.pnp
-.pnp.js
 
-# Testing
-coverage/
+# Logs and temp files
+*.log
+*.tmp
 
-# Next.js
-.next/
-out/
-build/
-dist/
-
-# Misc
-.DS_Store
-*.pem
+# Environment
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
 
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Editors
+.vscode/
+.idea/
 
-# Turbo
-.turbo
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/modules/
+.DS_Store
+Thumbs.db
 
-# TypeScript
-*.tsbuildinfo 
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+pypy-*
+.Python
+share/python-wheels/
+wheels/
+*.whl
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+.coverage*
+htmlcov/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Thumbs.db:encryptable
+```
